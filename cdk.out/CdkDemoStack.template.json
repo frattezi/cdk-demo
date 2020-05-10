@@ -1,0 +1,212 @@
+{
+  "Resources": {
+    "CdkDemoStackRole5E42D508": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "amplify.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "CdkDemoStack/CdkDemoStack/Role/Resource"
+      }
+    },
+    "CdkDemoStackF5636455": {
+      "Type": "AWS::Amplify::App",
+      "Properties": {
+        "Name": "CdkDemoStack",
+        "BuildSpec": "{\n  \"version\": \"1.0\",\n  \"frontend\": {\n    \"phases\": {\n      \"preBuild\": {\n        \"commands\": [\n          \"yarn\"\n        ]\n      },\n      \"build\": {\n        \"commands\": [\n          \"yarn build\"\n        ]\n      }\n    },\n    \"artifacts\": {\n      \"baseDirectory\": \"dist\",\n      \"files\": \"**/*\"\n    }\n  }\n}",
+        "IAMServiceRole": {
+          "Fn::GetAtt": [
+            "CdkDemoStackRole5E42D508",
+            "Arn"
+          ]
+        },
+        "OauthToken": "d5faae1d2fdbf33d04d859f946d2aa5a0a998b58",
+        "Repository": "https://github.com/frattezi/user-demo"
+      },
+      "Metadata": {
+        "aws:cdk:path": "CdkDemoStack/CdkDemoStack/Resource"
+      }
+    },
+    "CdkDemoStackmasterC6A8FB66": {
+      "Type": "AWS::Amplify::Branch",
+      "Properties": {
+        "AppId": {
+          "Fn::GetAtt": [
+            "CdkDemoStackF5636455",
+            "AppId"
+          ]
+        },
+        "BranchName": "master",
+        "EnableAutoBuild": true,
+        "EnablePullRequestPreview": true,
+        "EnvironmentVariables": [
+          {
+            "Name": "STAGE",
+            "Value": "prod"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "CdkDemoStack/CdkDemoStack/master/Resource"
+      }
+    },
+    "CdkDemoStackApi03230BBD": {
+      "Type": "AWS::AppSync::GraphQLApi",
+      "Properties": {
+        "AuthenticationType": "API_KEY",
+        "Name": "userDemoApi"
+      },
+      "Metadata": {
+        "aws:cdk:path": "CdkDemoStack/CdkDemoStackApi/Resource"
+      }
+    },
+    "CdkDemoStackApiSchemaA8BEC6B3": {
+      "Type": "AWS::AppSync::GraphQLSchema",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "CdkDemoStackApi03230BBD",
+            "ApiId"
+          ]
+        },
+        "Definition": "type User {\n    id: String!\n    name: String!\n    password: String!\n}\n\ntype Query {\n    getUsers: [User]\n}\n\ntype Mutation {\n    addUser(name: String!, password: String!): User \n}"
+      },
+      "Metadata": {
+        "aws:cdk:path": "CdkDemoStack/CdkDemoStackApi/Schema"
+      }
+    },
+    "CdkDemoStackApiCdkDemoStackDynamoDSServiceRole8C04C519": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "appsync.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "CdkDemoStack/CdkDemoStackApi/CdkDemoStackDynamoDS/ServiceRole/Resource"
+      }
+    },
+    "CdkDemoStackApiCdkDemoStackDynamoDSServiceRoleDefaultPolicy6E94D1F1": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "CdkDemoStackUsersTableE25FE805",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "CdkDemoStackApiCdkDemoStackDynamoDSServiceRoleDefaultPolicy6E94D1F1",
+        "Roles": [
+          {
+            "Ref": "CdkDemoStackApiCdkDemoStackDynamoDSServiceRole8C04C519"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "CdkDemoStack/CdkDemoStackApi/CdkDemoStackDynamoDS/ServiceRole/DefaultPolicy/Resource"
+      }
+    },
+    "CdkDemoStackApiCdkDemoStackDynamoDSF079E939": {
+      "Type": "AWS::AppSync::DataSource",
+      "Properties": {
+        "ApiId": {
+          "Fn::GetAtt": [
+            "CdkDemoStackApi03230BBD",
+            "ApiId"
+          ]
+        },
+        "Name": "CdkDemoStackDynamo",
+        "Type": "AMAZON_DYNAMODB",
+        "Description": "Database for UserDemo",
+        "DynamoDBConfig": {
+          "AwsRegion": {
+            "Ref": "AWS::Region"
+          },
+          "TableName": {
+            "Ref": "CdkDemoStackUsersTableE25FE805"
+          }
+        },
+        "ServiceRoleArn": {
+          "Fn::GetAtt": [
+            "CdkDemoStackApiCdkDemoStackDynamoDSServiceRole8C04C519",
+            "Arn"
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "CdkDemoStack/CdkDemoStackApi/CdkDemoStackDynamoDS/Resource"
+      }
+    },
+    "CdkDemoStackUsersTableE25FE805": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          }
+        ],
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5
+        }
+      },
+      "UpdateReplacePolicy": "Retain",
+      "DeletionPolicy": "Retain",
+      "Metadata": {
+        "aws:cdk:path": "CdkDemoStack/CdkDemoStackUsersTable/Resource"
+      }
+    }
+  }
+}
