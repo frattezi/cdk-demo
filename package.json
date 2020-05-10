@@ -24,6 +24,7 @@
   "dependencies": {
     "@aws-cdk/aws-amplify": "^1.38.0",
     "@aws-cdk/aws-appsync": "^1.38.0",
+    "@aws-cdk/aws-lambda-event-sources": "^1.38.0",
     "@aws-cdk/core": "1.38.0",
     "graphql": "^15.0.0",
     "source-map-support": "^0.5.16"
