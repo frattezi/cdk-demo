@@ -1,8 +1,10 @@
 import * as cdk from '@aws-cdk/core';
 import * as appsync from '@aws-cdk/aws-appsync';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
+
 import { join } from 'path'
 import { MappingTemplate, PrimaryKey, Values } from '@aws-cdk/aws-appsync';
+import { setupNotificationLambda } from '../lambda/lambda';
 
 export const setupAppsync = (app: cdk.Construct, id: string) => {
   const api = new appsync.GraphQLApi(app, `Api`, {
@@ -15,8 +17,10 @@ export const setupAppsync = (app: cdk.Construct, id: string) => {
     schemaDefinitionFile: join(__dirname, 'schema.graphql'),
   });
 
+  // DynamoDB setup
   const usersTable = new dynamodb.Table(app, `UsersTable`, {
-    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING }
+    partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+    stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
   });
 
   const userDS = api.addDynamoDbDataSource('User', 'The user data source', usersTable);
@@ -53,4 +57,9 @@ export const setupAppsync = (app: cdk.Construct, id: string) => {
   });
 
   api.addDynamoDbDataSource(`Dynamo`, 'Database for UserDemo', usersTable)
+
+  // Lambda Setup
+  setupNotificationLambda(app, usersTable)
+
+  return api
 }

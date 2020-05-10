@@ -1,12 +1,15 @@
 import * as codebuild from '@aws-cdk/aws-codebuild';
 import * as amplify from '@aws-cdk/aws-amplify';
 import * as cdk from '@aws-cdk/core';
+import { setupAppsync } from '../appsync/appsync';
 
 export const setupAmplify = (app: cdk.Construct, id: string) => {
+  const api = setupAppsync(app, id)
   const amplifyApp = new amplify.App(app, 'Amplify', {
     sourceCodeProvider: new amplify.GitHubSourceCodeProvider({
       owner: 'frattezi',
       repository: 'user-demo',
+
       // TODO: Use cdk.SecretValue Api
       oauthToken: cdk.SecretValue.plainText(process?.env?.GITHUB_TOKEN || '')
     }),
@@ -16,12 +19,16 @@ export const setupAmplify = (app: cdk.Construct, id: string) => {
         phases: {
           preBuild: {
             commands: [
-              'yarn'
+              `export GRAPHQL_URL=${api.graphQlUrl}`,
+              `export AUTH_KEY=${api.apiKey}`,
+              'yarn',
             ]
           },
           build: {
             commands: [
-              'yarn build'
+              'echo $GRAPHQL_URL',
+              'echo $AUTH_KEY',
+              'yarn build',
             ]
           }
         },
